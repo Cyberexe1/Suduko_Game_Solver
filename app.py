@@ -14,6 +14,42 @@ OCR_API_KEY = os.getenv('OCR_API_KEY')
 if not OCR_API_KEY or OCR_API_KEY == 'YOUR_API_KEY_HERE':
     raise RuntimeError('ERROR: OCR.space API key is missing. Please add it to your .env file.')
 
+def is_valid(board, row, col, num):
+    """Check if placing num at board[row][col] is valid according to Sudoku rules"""
+    # Check row
+    for x in range(9):
+        if board[row][x] == num:
+            return False
+ 
+    # Check column
+    for x in range(9):
+        if board[x][col] == num:
+            return False
+ 
+    # Check 3x3 sub-grid
+    start_row = row - row % 3
+    start_col = col - col % 3
+    for i in range(3):
+        for j in range(3):
+            if board[start_row + i][start_col + j] == num:
+                return False
+ 
+    return True
+
+def solve_sudoku(board):
+    """Solve Sudoku puzzle using backtracking algorithm"""
+    for row in range(9):
+        for col in range(9):
+            if board[row][col] == 0:  # Empty cell found
+                for num in range(1, 10):  # Try numbers 1-9
+                    if is_valid(board, row, col, num):
+                        board[row][col] = num
+                        if solve_sudoku(board):
+                            return True
+                        board[row][col] = 0  # Backtrack
+                return False  # No valid number found
+    return True  # All cells filled successfully
+
 def encode_board(board):
     return '%5B' + '%5D%2C%5B'.join([','.join(map(str, row)) for row in board]) + '%5D'
 
@@ -82,15 +118,29 @@ def process_image():
 def solve_puzzle():
     data = request.get_json()
     board = data.get('board')
+    
     if not board or not isinstance(board, list):
         return jsonify({'error': 'Invalid board data provided.'}), 400
-    encoded_data = encode_params({'board': board})
-    headers = {'Content-Type': 'application/x-www-form-urlencoded'}
-    response = requests.post('https://sugoku.onrender.com/solve', data=encoded_data, headers=headers)
-    if response.status_code != 200:
-        return jsonify({'error': 'Failed to solve puzzle using external API.'}), 500
-    solved = response.json()
-    return jsonify({'solution': solved.get('solution')})
+    
+    # Validate board dimensions
+    if len(board) != 9 or any(len(row) != 9 for row in board):
+        return jsonify({'error': 'Board must be 9x9 grid.'}), 400
+    
+    # Validate board values
+    for i, row in enumerate(board):
+        for j, cell in enumerate(row):
+            if not isinstance(cell, int) or cell < 0 or cell > 9:
+                return jsonify({'error': f'Invalid value at position ({i}, {j}). Values must be integers 0-9.'}), 400
+    
+    # Create a deep copy of the board to avoid modifying the original
+    import copy
+    solution_board = copy.deepcopy(board)
+    
+    # Try to solve the puzzle
+    if solve_sudoku(solution_board):
+        return jsonify({'solution': solution_board})
+    else:
+        return jsonify({'error': 'No solution exists for this Sudoku puzzle.'}), 400
 
 @app.route('/')
 def root():
