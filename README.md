@@ -5,7 +5,7 @@ A web-based Sudoku solver that uses a Python Flask backend for image-based grid 
 ## Features
 
 - Upload a Sudoku puzzle image and extract the grid using OCR.space API.
-- Solve the puzzle using Sugoku API.
+- Solve the puzzle using Backtracking Algorithm.
 - Interactive web UI for manual entry, clearing, and resetting the board.
 
 ## Setup
