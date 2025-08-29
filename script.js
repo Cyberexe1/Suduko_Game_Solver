@@ -297,7 +297,7 @@ document.addEventListener('DOMContentLoaded', () => {
         updateStatus('Processing image...', 'info', 'fas fa-cog fa-spin');
         
         try {
-            const response = await fetch('http://127.0.0.1:5000/process-image', {
+            const response = await fetch('/process-image', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -341,7 +341,7 @@ document.addEventListener('DOMContentLoaded', () => {
         updateStatus('AI is solving the puzzle...', 'info', 'fas fa-magic');
         
         try {
-            const response = await fetch('http://127.0.0.1:5000/solve-puzzle', {
+            const response = await fetch('/solve-puzzle', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
